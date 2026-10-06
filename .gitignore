@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# heurics-cert
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+heurics_cert/checkers/c/ccpocheck
+heurics_cert/checkers/c/*.exe
+
+# market data rebuilt by examples/equity_panel/build_returns.py: never committed
+examples/equity_panel/returns*.npy

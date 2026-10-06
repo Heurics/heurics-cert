@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heurics-cert"
+dynamic = ["version"]
+description = "Checkable optimality certificates for cardinality-constrained portfolio optimization"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+urls = { Homepage = "https://heurics.com", Source = "https://github.com/heurics/heurics-cert" }
+authors = [{ name = "Aditya Khanke", email = "aditya@heurics.com" }]
+keywords = ["optimization", "certificates", "verification", "portfolio", "mixed-integer", "dual bounds"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Intended Audience :: Science/Research",
+]
+# The core is numpy only: enough to load and rigorously check certificates. Proving needs an extra.
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+# the default prover (FISTA relaxation), the batched GPU prover, the copositive prover and the extras
+prove = ["jax", "jaxtyping", "scipy"]
+# the interior-point relaxation solver, an independent cross-check of the default one
+reference = ["cvxpy", "clarabel"]
+all = ["heurics-cert[prove,reference]"]
+test = ["heurics-cert[all]", "pytest"]
+
+[project.scripts]
+heurics-cert = "heurics_cert.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "heurics_cert._version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["heurics_cert*"]
+
+[tool.setuptools.package-data]
+"heurics_cert.checkers" = ["c/ccpocheck.c", "c/Makefile"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

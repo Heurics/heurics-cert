@@ -1,0 +1,64 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    env:
+      JAX_PLATFORMS: cpu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: install
+        run: python -m pip install -e ".[test]"
+      - name: build the C checker
+        run: heurics-cert build-checker
+      - name: checker availability
+        run: heurics-cert info
+      - name: tests
+        run: python -m pytest -q
+      - name: adversarial suite (every checker must reject every mutation)
+        run: python tools/adversarial.py
+      - name: Python and C checkers agree
+        run: python tools/cross_check.py --out cross_check.md
+      - name: quickstart
+        run: python examples/quickstart.py
+
+  docker:
+    name: the Docker image runs every check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t heurics-cert .
+      - run: docker run --rm heurics-cert
+
+  checker-only:
+    name: checkers on a bare install (numpy only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install without the prover extras
+        run: python -m pip install -e .
+      - name: check the example certificates (rigorous tier on all; exact tier on n <= 40, its cost grows like n^4)
+        run: |
+          for f in examples/certificates/*.json; do heurics-cert verify "$f" --method rigorous; done
+          for f in examples/certificates/syn*.json; do heurics-cert verify "$f" --method exact; done
+      - name: the exact tier runs on the standard library alone
+        run: |
+          python -m venv /tmp/bare
+          /tmp/bare/bin/python heurics_cert/checkers/bound.py examples/certificates/syn20_float64_mdefault_K5.json --exact

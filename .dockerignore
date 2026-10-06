@@ -1,0 +1,12 @@
+.git
+.github
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.egg-info
+build
+dist
+.venv
+heurics_cert/checkers/c/ccpocheck
+heurics_cert/checkers/c/*.exe
+examples/equity_panel/returns*.npy
